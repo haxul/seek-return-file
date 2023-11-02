@@ -30,7 +30,7 @@ public class Application {
         @GetMapping("/offsets")
         public long getOffsets() {
             try (var file = new RandomAccessFile(FILE_PATH, "r")) {
-                long l = file.length();
+                long l = file.length(); // тут можно из бд брать, из таблицы с метаданными
                 System.out.println("file len: " +l);
                 long offsets = l / CHUNK_SIZE;
                 System.out.println(offsets);
@@ -45,21 +45,21 @@ public class Application {
             var emitter = new SseEmitter();
             pool.execute(() -> {
                 try (var file = new RandomAccessFile(FILE_PATH, "r")) {
-                    long length = file.length();
-                    var pointer = CHUNK_SIZE * offset;
-                    file.seek(pointer);
-                    long s = pointer + CHUNK_SIZE > length ? length - pointer : CHUNK_SIZE;
+                    long len = file.length();
+                    var ptr = CHUNK_SIZE * offset;
+                    file.seek(ptr);
+                    long s = ptr + CHUNK_SIZE > len ? len - ptr : CHUNK_SIZE;
                     var buff = new byte[(int) s - 1];
                     file.read(buff);
                     emitter.send(buff, MediaType.APPLICATION_OCTET_STREAM);
                     emitter.complete();
                     System.out.println("file is done");
                 } catch (Exception e) {
-                    System.out.println(e);
+                    System.err.println(e);
                     emitter.completeWithError(e);
                 }
             });
-            System.out.println("here");
+            System.out.println("method is down");
             return emitter;
         }
     }
