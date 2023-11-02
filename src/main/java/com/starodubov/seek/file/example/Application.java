@@ -4,13 +4,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.File;
 import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -21,33 +19,47 @@ public class Application {
         SpringApplication.run(Application.class, args);
     }
 
-    public static final String FILE_PATH = "/home/haxul/Development/seek-return-file/files/test.mp3";
+    public static final String FILE_PATH = "C:\\Users\\sssta\\dev\\seek-return-file\\files\\test.mp3";
 
     @RestController
     public static class FileController {
 
         private final ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor();
+        private final int CHUNK_SIZE = 1024 * 1024;
+
+        @GetMapping("/offsets")
+        public long getOffsets() {
+            try (var file = new RandomAccessFile(FILE_PATH, "r")) {
+                long l = file.length();
+                System.out.println("file len: " +l);
+                long offsets = l / CHUNK_SIZE;
+                System.out.println(offsets);
+                return offsets;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         @GetMapping("/file")
-        public SseEmitter seek() {
-            SseEmitter emitter = new SseEmitter();
+        public SseEmitter seek(@RequestParam Long offset) {
+            var emitter = new SseEmitter();
             pool.execute(() -> {
                 try (var file = new RandomAccessFile(FILE_PATH, "r")) {
                     long length = file.length();
-                    int offset =(int) length / 2;
-                    file.seek(0);
-                    System.out.println(length);
-                    int l = ((int) length) - offset;
-                    var buff = new byte[500_000];
+                    var pointer = CHUNK_SIZE * offset;
+                    file.seek(pointer);
+                    long s = pointer + CHUNK_SIZE > length ? length - pointer : CHUNK_SIZE;
+                    var buff = new byte[(int) s - 1];
                     file.read(buff);
                     emitter.send(buff, MediaType.APPLICATION_OCTET_STREAM);
                     emitter.complete();
-
+                    System.out.println("file is done");
                 } catch (Exception e) {
                     System.out.println(e);
                     emitter.completeWithError(e);
                 }
             });
+            System.out.println("here");
             return emitter;
         }
     }
