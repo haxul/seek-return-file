@@ -51,7 +51,7 @@ public class Application {
                     var ptr = CHUNK_SIZE * offset;
                     file.seek(ptr);
                     long s = ptr + CHUNK_SIZE > len ? len - ptr : CHUNK_SIZE;
-                    var buff = new byte[(int) s - 1];
+                    var buff = new byte[(int) s];
                     file.read(buff);
                     emitter.send(buff, MediaType.APPLICATION_OCTET_STREAM);
                     emitter.complete();
