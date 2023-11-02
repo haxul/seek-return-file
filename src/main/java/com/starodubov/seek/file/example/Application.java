@@ -1,8 +1,11 @@
 package com.starodubov.seek.file.example;
 
+import lombok.SneakyThrows;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,14 +28,14 @@ public class Application {
     public static class FileController {
 
         private final ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor();
-        private final int CHUNK_SIZE = 1024 * 1024;
+        private static final int CHUNK_SIZE = 1024 * 1024;
 
         // Тут получаем из скольки частей состоит файл
         @GetMapping("/offsets")
         public long getOffsets() {
             try (var file = new RandomAccessFile(FILE_PATH, "r")) {
                 long l = file.length(); // тут можно из бд брать, из таблицы с метаданными
-                System.out.println("file len: " +l);
+                System.out.println("file len: " + l);
                 long offsets = l / CHUNK_SIZE;
                 System.out.println(offsets);
                 return offsets;
@@ -42,7 +45,7 @@ public class Application {
         }
 
         // тут получаем непосредственно кусок файла
-        @GetMapping("/file")
+        @GetMapping("/v1/file")
         public SseEmitter seek(@RequestParam Long offset) {
             var emitter = new SseEmitter();
             pool.execute(() -> {
@@ -63,6 +66,30 @@ public class Application {
             });
             System.out.println("method is down");
             return emitter;
+        }
+
+        @SneakyThrows
+        @GetMapping(value = "/v2/file")
+        public ResponseEntity<Object> seek2(@RequestParam Long offset) {
+            try (var file = new RandomAccessFile(FILE_PATH, "r")) {
+                long len = file.length();
+                var ptr = CHUNK_SIZE * offset;
+                if (ptr > len) {
+                    return ResponseEntity
+                            .status(400)
+                            .build();
+                }
+                file.seek(ptr);
+                long s = ptr + CHUNK_SIZE > len ? len - ptr : CHUNK_SIZE;
+                var buff = new byte[(int) s];
+                file.read(buff);
+                return ResponseEntity.status(200)
+                        .contentType(new MediaType("audio", "mpeg"))
+                        .body(buff);
+            } catch (Exception e) {
+                System.err.println(e);
+                throw e;
+            }
         }
     }
 }
