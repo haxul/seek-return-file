@@ -27,6 +27,7 @@ public class Application {
         private final ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor();
         private final int CHUNK_SIZE = 1024 * 1024;
 
+        // Тут получаем из скольки частей состоит файл
         @GetMapping("/offsets")
         public long getOffsets() {
             try (var file = new RandomAccessFile(FILE_PATH, "r")) {
@@ -40,6 +41,7 @@ public class Application {
             }
         }
 
+        // тут получаем непосредственно кусок файла
         @GetMapping("/file")
         public SseEmitter seek(@RequestParam Long offset) {
             var emitter = new SseEmitter();
