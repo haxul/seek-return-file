@@ -3,8 +3,9 @@ dontinline,*.*_avgt_jmhStub
 dontinline,*.*_sample_jmhStub
 dontinline,*.*_ss_jmhStub
 dontinline,*.*_thrpt_jmhStub
+inline,com/starodubov/seek/file/example/Benchmarks.inputStreamWith1Mb
 inline,com/starodubov/seek/file/example/Benchmarks.randomAccessFile1Mb
 inline,com/starodubov/seek/file/example/Benchmarks.randomAccessFile2Mb
 inline,com/starodubov/seek/file/example/Benchmarks.randomAccessFile4Mb
-inline,com/starodubov/seek/file/example/Benchmarks.randomAccessFileWitchChannel
-inline,com/starodubov/seek/file/example/Benchmarks.randomAccessFileWitchDirectChannel
+inline,com/starodubov/seek/file/example/Benchmarks.randomAccessFileWitchChannel4MB
+inline,com/starodubov/seek/file/example/Benchmarks.randomAccessFileWitchDirectChannel4Mb

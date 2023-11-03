@@ -1,14 +1,16 @@
 package com.starodubov.seek.file.example;
 
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -18,6 +20,8 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @BenchmarkMode(Mode.AverageTime)
 public class Benchmarks {
+
+    //ПЕРЕОПРЕДЕЛИТЬ
     public static final String FILE_PATH = "C:\\Users\\sssta\\dev\\seek-return-file\\files\\test.mp3";
 
     @Benchmark
@@ -69,7 +73,7 @@ public class Benchmarks {
     }
 
     @Benchmark
-    public void randomAccessFileWitchChannel(Blackhole hole) {
+    public void randomAccessFileWitchChannel4MB(Blackhole hole) {
         int CHUNK_SIZE = 4 * 1024 * 1024;
         try (var file = new RandomAccessFile(FILE_PATH, "r")) {
             long len = file.length();
@@ -86,7 +90,7 @@ public class Benchmarks {
     }
 
     @Benchmark
-    public void randomAccessFileWitchDirectChannel(Blackhole hole) {
+    public void randomAccessFileWitchDirectChannel4Mb(Blackhole hole) {
         int CHUNK_SIZE = 4 * 1024 * 1024;
         try (var file = new RandomAccessFile(FILE_PATH, "r")) {
             long len = file.length();
@@ -102,10 +106,24 @@ public class Benchmarks {
         }
     }
 
+    @Benchmark
+    public void inputStreamWith1Mb(Blackhole hole) {
+        int CHUNK_SIZE = 1 * 1024 * 1024;
+        try (final InputStream inStream = new BufferedInputStream(new FileInputStream(FILE_PATH))) {
+            var ptr = CHUNK_SIZE * 1;
+            inStream.skipNBytes(ptr);
+            var buff = new byte[CHUNK_SIZE];
+            IOUtils.read(inStream, buff, 0, buff.length);
+            hole.consume(buff);
+        } catch (Exception e) {
+
+        }
+    }
+
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()
                 .include(Benchmarks.class.getSimpleName())
-                .warmupIterations(3)
+                .warmupIterations(1)
                 .forks(1)
                 .build();
 

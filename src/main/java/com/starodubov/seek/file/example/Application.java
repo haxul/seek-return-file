@@ -1,6 +1,7 @@
 package com.starodubov.seek.file.example;
 
 import lombok.SneakyThrows;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
@@ -11,6 +12,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -25,7 +29,7 @@ public class Application {
         SpringApplication.run(Application.class, args);
     }
 
-    public static final String FILE_PATH = "C:\\Users\\sssta\\dev\\seek-return-file\\files\\test.mp3";
+    public static final String FILE_PATH = "C:\\Users\\sssta\\dev\\seek-return-file\\files\\test2.mp3";
 
     @RestController
     public static class FileController {
