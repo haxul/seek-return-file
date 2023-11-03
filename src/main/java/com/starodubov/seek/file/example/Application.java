@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.RandomAccessFile;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -47,7 +50,7 @@ public class Application {
         // тут получаем непосредственно кусок файла
         @GetMapping("/v1/file")
         public SseEmitter seek(@RequestParam Long offset) {
-            var emitter = new SseEmitter();
+            var emitter = new SseEmitter(100000000L);
             pool.execute(() -> {
                 try (var file = new RandomAccessFile(FILE_PATH, "r")) {
                     long len = file.length();
@@ -68,7 +71,6 @@ public class Application {
             return emitter;
         }
 
-        @SneakyThrows
         @GetMapping(value = "/v2/file")
         public ResponseEntity<Object> seek2(@RequestParam Long offset) {
             try (var file = new RandomAccessFile(FILE_PATH, "r")) {
@@ -88,7 +90,31 @@ public class Application {
                         .body(buff);
             } catch (Exception e) {
                 System.err.println(e);
-                throw e;
+                return null;
+            }
+        }
+
+        @GetMapping(value = "/v3/file")
+        public ResponseEntity<Object> seek3(@RequestParam Long offset) {
+            try (var file = new RandomAccessFile(FILE_PATH, "r")) {
+                long len = file.length();
+                var ptr = CHUNK_SIZE * offset;
+                if (ptr > len) {
+                    return ResponseEntity
+                            .status(400)
+                            .build();
+                }
+                file.seek(ptr);
+                final FileChannel channel = file.getChannel();
+                long s = ptr + CHUNK_SIZE > len ? len - ptr : CHUNK_SIZE;
+                var buff = ByteBuffer.allocate((int) s);
+                channel.read(buff);
+                return ResponseEntity.status(200)
+                        .contentType(new MediaType("audio", "mpeg"))
+                        .body(buff.array());
+            } catch (Exception e) {
+                System.err.println(e);
+                return null;
             }
         }
     }
