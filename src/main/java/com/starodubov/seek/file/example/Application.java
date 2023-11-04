@@ -29,7 +29,7 @@ public class Application {
         SpringApplication.run(Application.class, args);
     }
 
-    public static final String FILE_PATH = "C:\\Users\\sssta\\dev\\seek-return-file\\files\\test2.mp3";
+    public static final String FILE_PATH = "C:\\Users\\sssta\\dev\\seek-return-file\\files\\test.mp3";
 
     @RestController
     public static class FileController {
@@ -43,7 +43,7 @@ public class Application {
             try (var file = new RandomAccessFile(FILE_PATH, "r")) {
                 long l = file.length(); // тут можно из бд брать, из таблицы с метаданными
                 System.out.println("file len: " + l);
-                long offsets = l / CHUNK_SIZE;
+                long offsets = (long) Math.ceil((double) l / CHUNK_SIZE);
                 System.out.println(offsets);
                 return offsets;
             } catch (Exception e) {
