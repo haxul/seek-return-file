@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 public class Benchmarks {
 
     //ПЕРЕОПРЕДЕЛИТЬ
-    public static final String FILE_PATH = "C:\\Users\\sssta\\dev\\seek-return-file\\files\\test.mp3";
+    public static final String FILE_PATH = "C:\\Users\\sssta\\dev\\seek-return-file\\files\\test";
 
     @Benchmark
     public void randomAccessFile1Mb(Blackhole hole) {
